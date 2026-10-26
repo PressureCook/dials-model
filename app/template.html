@@ -1,0 +1,308 @@
+<title>Dials Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;600;800&family=Chivo+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a single calm column, like a lab testing booth; one task card at a time, results as three instrument gauges. */
+:root{
+  --bg:#EDF0F3; --surface:#FBFCFD; --ink:#16202B; --muted:#5B6878; --line:#D3DAE2;
+  --accent:#B5651D; --accent-soft:#F3E3D2; --band:#DDE4EC; --good:#2F7A57;
+  --font-display:"Chivo",ui-sans-serif,system-ui,sans-serif; --font-mono:"Chivo Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161C; --surface:#18202A; --ink:#E6EBF0; --muted:#97A3B1; --line:#2A3542;
+  --accent:#E39A55; --accent-soft:#3A2A1C; --band:#243040; --good:#6CC49A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161C; --surface:#18202A; --ink:#E6EBF0; --muted:#97A3B1; --line:#2A3542;
+  --accent:#E39A55; --accent-soft:#3A2A1C; --band:#243040; --good:#6CC49A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-display);font-size:16px;line-height:1.5;padding-inline:16px;padding-block:24px 48px}
+.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:1.35rem;letter-spacing:-.01em}
+.brand span{color:var(--accent)}
+.stage{font-family:var(--font-mono);font-size:.78rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:28px 24px;display:flex;flex-direction:column;gap:18px}
+h1{font-size:clamp(1.6rem,4.5vw,2.2rem);line-height:1.15;margin:0;font-weight:800;text-wrap:balance;letter-spacing:-.015em}
+h2{font-size:1.25rem;margin:0;font-weight:800;text-wrap:balance}
+p{margin:0;max-width:62ch}
+.muted{color:var(--muted)}
+.small{font-size:.88rem}
+.label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.parts{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.parts li{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:baseline;padding:12px 0;border-top:1px solid var(--line)}
+.parts li:last-child{border-bottom:1px solid var(--line)}
+.parts .n{font-family:var(--font-mono);color:var(--accent);font-weight:600}
+.parts .t{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:12px 18px;font-weight:600}
+button:hover{border-color:var(--ink)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+button.primary:hover{opacity:.9}
+button:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.progress{height:4px;background:var(--band);border-radius:2px;overflow:hidden}
+.progress>div{height:100%;background:var(--accent);width:0;transition:width .2s}
+.count{font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.stmt{font-size:clamp(1.25rem,3.6vw,1.6rem);font-weight:600;line-height:1.3;min-height:3.2em;text-wrap:balance}
+.likert{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.likert button{display:flex;flex-direction:column;gap:4px;align-items:center;padding:12px 4px;font-weight:400;font-size:.8rem;line-height:1.2;min-width:0}
+.likert button b{font-family:var(--font-mono);font-size:1.1rem}
+.offer{display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px 0;text-align:center}
+.coin{font-family:var(--font-mono);font-size:.8rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.amounts{display:flex;gap:28px;align-items:baseline;justify-content:center;flex-wrap:wrap}
+.amt{font-family:var(--font-mono);font-size:clamp(1.8rem,7vw,2.6rem);font-weight:600;font-variant-numeric:tabular-nums}
+.amt.win{color:var(--good)} .amt.lose{color:var(--accent)}
+.amt small{display:block;font-family:var(--font-display);font-size:.8rem;font-weight:400;color:var(--muted)}
+.choice2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.choice2 button{padding:18px 10px}
+.kbd{font-family:var(--font-mono);font-size:.72rem;color:var(--muted);font-weight:400;display:block;margin-top:2px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{display:flex;flex-direction:column;gap:10px;align-items:center;padding:22px 10px;text-align:center}
+.opt .money{font-family:var(--font-mono);font-size:clamp(1.5rem,6vw,2.1rem);font-weight:600;color:var(--good);font-variant-numeric:tabular-nums}
+.opt .shock{font-family:var(--font-mono);font-size:1rem;color:var(--accent);font-variant-numeric:tabular-nums}
+.who{display:inline-block;background:var(--accent-soft);color:var(--ink);border-radius:999px;padding:4px 12px;font-size:.85rem;font-weight:600;align-self:flex-start}
+.gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.gauge{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.gauge svg{width:100%;height:auto;display:block}
+.gauge .name{font-weight:800;font-size:1.1rem}
+.gauge .val{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:.9rem}
+.gauge .read{font-size:.9rem}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:.8rem}
+td.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;text-align:right}
+th.num{text-align:right}
+.tablewrap{overflow-x:auto}
+.note{border-left:3px solid var(--accent);padding:4px 0 4px 14px;font-size:.92rem;color:var(--muted)}
+.status{font-size:.88rem;color:var(--muted)}
+.confirm{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.92rem}
+@media (max-width:460px){.card{padding:22px 16px}.likert button span{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top"><div class="brand">Dials <span>Lab</span></div><div class="stage" id="stage">Prototype v0.1</div></header>
+  <main id="app"></main>
+  <p class="small muted">Prototype measurement battery for the dials model: guilt, fear and reward. Choices are hypothetical. Readings come from a network trained on simulated people and are not a diagnosis.</p>
+</div>
+
+<script>
+const MODEL=__MODEL__;
+const ITEMS=[
+["M1","It's not wise to tell your secrets."],["M2","I like to use clever manipulation to get my way."],
+["M3","Whatever it takes, you must get the important people on your side."],["M4","Avoid direct conflict with others because they may be useful in the future."],
+["M5","It's wise to keep track of information that you can use against people later."],["M6","You should wait for the right time to get back at people."],
+["M7","There are things you should hide from other people to preserve your reputation."],["M8","Make sure your plans benefit yourself, not others."],
+["M9","Most people can be manipulated."],["N1","People see me as a natural leader."],["N2","I hate being the center of attention."],
+["N3","Many group activities tend to be dull without me."],["N4","I know that I am special because everyone keeps telling me so."],
+["N5","I like to get acquainted with important people."],["N6","I feel embarrassed if someone compliments me."],
+["N7","I have been compared to famous people."],["N8","I am an average person."],["N9","I insist on getting the respect I deserve."],
+["P1","I like to get revenge on authorities."],["P2","I avoid dangerous situations."],["P3","Payback needs to be quick and nasty."],
+["P4","People often say I'm out of control."],["P5","It's true that I can be mean to others."],["P6","People who mess with me always regret it."],
+["P7","I have never gotten into trouble with the law."],["P8","I enjoy having sex with people I hardly know."],["P9","I'll say anything to get what I want."]];
+const REVERSE=new Set(["N2","N6","N8","P2","P7"]);
+const POP={M:[3.71,0.79],N:[3.07,0.77],P:[2.81,0.81]};
+const LIKERT=["Strongly disagree","Disagree","Neither","Agree","Strongly agree"];
+const DRAFT_KEY="dials-lab-draft-v1";
+let LAYERS=null;
+function layers(){if(!LAYERS)LAYERS=loadWeights(MODEL.w,MODEL.shapes);return LAYERS;}
+__MODELJS__
+
+function shuffle(a,seed){let s=seed>>>0;const r=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296};
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function freshState(){const seed=(Date.now()^Math.floor(Math.random()*1e9))>>>0;
+  const harmSelf=shuffle([...Array(80).keys()],seed+2).map(i=>({block:0,i,moreRight:Math.random()<.5,baseM:1+Math.floor(Math.random()*5),baseS:2+Math.floor(Math.random()*7)}));
+  const harmOther=shuffle([...Array(80).keys()],seed+3).map(i=>({block:1,i,moreRight:Math.random()<.5,baseM:1+Math.floor(Math.random()*5),baseS:2+Math.floor(Math.random()*7)}));
+  return {v:1,phase:"intro",pos:0,items:Array(27).fill(null),gOrder:shuffle([...Array(128).keys()],seed+1),gamb:Array(128).fill(null),
+    hPlan:[...harmSelf,...harmOther],harm:Array(160).fill(null),startedAt:new Date().toISOString()};}
+let S=loadDraft()||freshState();
+function loadDraft(){try{const d=JSON.parse(localStorage.getItem(DRAFT_KEY));return d&&d.v===1?d:null}catch(e){return null}}
+function saveDraft(){try{localStorage.setItem(DRAFT_KEY,JSON.stringify(S))}catch(e){}}
+function clearDraft(){try{localStorage.removeItem(DRAFT_KEY)}catch(e){}}
+
+const app=document.getElementById("app"),stage=document.getElementById("stage");
+let lock=false;function guard(fn){return(...a)=>{if(lock)return;lock=true;setTimeout(()=>lock=false,220);fn(...a)}}
+function h(html){app.innerHTML=html;const f=app.querySelector("[data-focus]");if(f)f.focus({preventScroll:true});}
+function bar(done,total){return `<div class="progress" aria-hidden="true"><div style="width:${(100*done/total).toFixed(1)}%"></div></div><div class="count">${done} / ${total}</div>`}
+
+function render(){
+  stage.textContent={intro:"Prototype v0.1",q:"Part 1 of 3",gi:"Part 2 of 3",g:"Part 2 of 3",hi:"Part 3 of 3",h:"Part 3 of 3",done:"Your reading"}[S.phase]||"";
+  if(S.phase==="intro")return renderIntro();
+  if(S.phase==="q")return renderQ();
+  if(S.phase==="gi")return renderGI();
+  if(S.phase==="g")return renderG();
+  if(S.phase==="hi")return renderHI();
+  if(S.phase==="h")return renderH();
+  if(S.phase==="done")return renderDone();
+}
+function renderIntro(){
+  const resume=S.items.some(v=>v!==null);
+  h(`<section class="card">
+    <h1>Read your guilt, fear and reward dials</h1>
+    <p>Three short parts, about 20 minutes in total. Answer quickly and honestly; there are no right answers. All money and shocks are imaginary, so choose as you would if they were real.</p>
+    <ol class="parts">
+      <li><span class="n">1</span><span>Questionnaire: 27 statements about yourself</span><span class="t">~4 min</span></li>
+      <li><span class="n">2</span><span>Gambles: accept or reject 128 coin flip bets</span><span class="t">~6 min</span></li>
+      <li><span class="n">3</span><span>Money or shocks: 160 choices, for you and for a stranger</span><span class="t">~10 min</span></li>
+    </ol>
+    <p class="small muted">At the end the network reads your three dials with a 90% confidence range, and the session is saved to this page. Use the keys shown on each screen, or tap the buttons.</p>
+    <div class="row"><button class="primary" id="go" data-focus>${resume?"Continue where you left off":"Start"}</button>${resume?`<button id="restart">Start over</button>`:""}</div>
+    <div id="confirmSlot"></div>
+  </section>${historyBlock()}`);
+  app.querySelector("#go").onclick=()=>{S.phase=resume?S.phase==="intro"?nextUnfinished():S.phase:"q";if(!resume){S.phase="q";S.pos=0}saveDraft();render()};
+  const r=app.querySelector("#restart");if(r)r.onclick=()=>askRestart();
+  loadHistory();
+}
+function nextUnfinished(){if(S.items.some(v=>v===null))return "q";if(S.gamb.some(v=>v===null))return "gi";if(S.harm.some(v=>v===null))return "hi";return "done"}
+function askRestart(){const slot=document.getElementById("confirmSlot");
+  slot.innerHTML=`<div class="confirm"><span>Discard your unfinished answers?</span><button id="yes">Discard and start over</button><button id="no">Keep them</button></div>`;
+  slot.querySelector("#yes").onclick=()=>{clearDraft();S=freshState();render()};slot.querySelector("#no").onclick=()=>slot.innerHTML="";}
+
+function renderQ(){
+  const i=S.items.findIndex(v=>v===null);if(i<0){S.phase="gi";saveDraft();return render()}
+  h(`<section class="card">${bar(i,27)}
+    <div class="label">How much do you agree?</div>
+    <div class="stmt" id="stmt">${ITEMS[i][1]}</div>
+    <div class="likert" role="group" aria-label="Agreement">${LIKERT.map((l,k)=>`<button data-v="${k+1}" ${k===2?"data-focus":""}><b>${k+1}</b><span>${l}</span></button>`).join("")}</div>
+    <div class="row"><button id="back" ${i===0?"disabled":""}>Back</button><span class="small muted">Keys 1 to 5</span></div>
+  </section>`);
+  app.querySelectorAll(".likert button").forEach(b=>b.onclick=guard(()=>answerQ(i,+b.dataset.v)));
+  app.querySelector("#back").onclick=()=>{if(i>0){S.items[i-1]=null;saveDraft();render()}};
+}
+function answerQ(i,v){S.items[i]=v;saveDraft();render()}
+
+function renderGI(){
+  h(`<section class="card"><div class="label">Part 2</div><h2>Coin flip gambles</h2>
+   <p>Each screen offers one bet on a fair coin. Heads you win the first amount, tails you lose the second. Accept it or reject it. If you reject, nothing happens.</p>
+   <p class="muted small">There are 128 bets. Some are generous and some are harsh. Decide each one on its own.</p>
+   <div class="row"><button class="primary" id="go" data-focus>Begin gambles</button></div></section>`);
+  app.querySelector("#go").onclick=()=>{S.phase="g";saveDraft();render()};
+}
+function renderG(){
+  const done=S.gamb.filter(v=>v!==null).length;if(done>=128){S.phase="hi";saveDraft();return render()}
+  const gi=S.gOrder[done];const win=MODEL.gain[gi],lose=MODEL.loss[gi];
+  h(`<section class="card">${bar(done,128)}
+    <div class="offer"><div class="coin">50 / 50 coin flip</div>
+      <div class="amounts"><div class="amt win">+£${win}<small>heads</small></div><div class="amt lose">−£${lose}<small>tails</small></div></div></div>
+    <div class="choice2"><button id="rej">Reject<span class="kbd">F</span></button><button class="primary" id="acc" data-focus>Accept<span class="kbd">J</span></button></div>
+  </section>`);
+  app.querySelector("#rej").onclick=guard(()=>answerG(gi,0));app.querySelector("#acc").onclick=guard(()=>answerG(gi,1));
+}
+function answerG(gi,v){S.gamb[gi]=v;saveDraft();render()}
+
+function renderHI(){
+  const firstOther=S.harm.slice(0,80).every(v=>v!==null);
+  const who=firstOther?"a stranger":"you";
+  h(`<section class="card"><div class="label">Part 3 · ${firstOther?"Block 2 of 2":"Block 1 of 2"}</div>
+   <h2>Money or shocks: shocks go to ${who}</h2>
+   <p>${firstOther
+     ?"Same choices again, but now the shocks go to another person you will never meet. The money still goes to you. Each shock is mildly painful, like a sharp static jolt."
+     :"Each screen shows two deals. Both give you money and some electric shocks to you. Each shock is mildly painful, like a sharp static jolt. Pick the deal you prefer."}</p>
+   <p class="muted small">80 choices in this block. Imagine the money and shocks are real.</p>
+   <div class="row"><button class="primary" id="go" data-focus>Begin</button></div></section>`);
+  app.querySelector("#go").onclick=()=>{S.phase="h";saveDraft();render()};
+}
+function renderH(){
+  const idx=S.harm.findIndex(v=>v===null);if(idx<0){S.phase="done";saveDraft();return render()}
+  if(idx===80&&!S.seenBlock2){S.seenBlock2=true;S.phase="hi";saveDraft();return render()}
+  const t=S.hPlan[idx];const hm=MODEL.hm[t.i],hs=MODEL.hs[t.i];
+  const less={m:t.baseM,s:t.baseS},more={m:t.baseM+hm,s:t.baseS+hs};
+  const L=t.moreRight?less:more,R=t.moreRight?more:less;const who=t.block===0?"you":"a stranger";
+  const opt=(o,key,id)=>`<button class="opt" id="${id}"><span class="money">£${o.m.toFixed(2)}</span><span class="shock">${o.s} shock${o.s>1?"s":""} to ${who}</span><span class="kbd">${key}</span></button>`;
+  h(`<section class="card">${bar(idx,160)}
+    <span class="who">Shocks go to ${who}</span>
+    <div class="label">Which deal do you take?</div>
+    <div class="opts">${opt(L,"F","l")}${opt(R,"J","r")}</div></section>`);
+  app.querySelector("#l").onclick=guard(()=>answerH(idx,!t.moreRight));
+  app.querySelector("#r").onclick=guard(()=>answerH(idx,t.moreRight));
+}
+function answerH(idx,tookMore){S.harm[idx]=tookMore?1:0;saveDraft();render()}
+
+document.addEventListener("keydown",e=>{if(e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
+  if(S.phase==="q"&&/^[1-5]$/.test(k)){const i=S.items.findIndex(v=>v===null);if(i>=0)guard(()=>answerQ(i,+k))()}
+  else if(S.phase==="g"&&(k==="f"||k==="j")){const b=app.querySelector(k==="f"?"#rej":"#acc");if(b)b.click()}
+  else if(S.phase==="h"&&(k==="f"||k==="j")){const b=app.querySelector(k==="f"?"#l":"#r");if(b)b.click()}});
+
+// ---------- results ----------
+function harmByDesign(){const out=Array(160).fill(0);S.hPlan.forEach((t,k)=>{out[t.block*80+t.i]=S.harm[k]});return out}
+function features(){const x=new Float32Array(315);
+  ITEMS.forEach(([id],j)=>{let v=S.items[j];if(REVERSE.has(id))v=6-v;x[j]=(v-3)/1.3});
+  for(let g=0;g<128;g++)x[27+g]=S.gamb[g]*2-1;const hb=harmByDesign();for(let k=0;k<160;k++)x[155+k]=hb[k]*2-1;return x}
+function scaleMeans(){const m={M:[],N:[],P:[]};ITEMS.forEach(([id],j)=>{let v=S.items[j];if(REVERSE.has(id))v=6-v;m[id[0]].push(v)});
+  const o={};for(const k in m)o[k]=m[k].reduce((a,b)=>a+b,0)/m[k].length;return o}
+function summary(){const hb=harmByDesign();return {gambleAccept:S.gamb.reduce((a,b)=>a+b,0)/128,
+  harmSelf:hb.slice(0,80).reduce((a,b)=>a+b,0)/80,harmOther:hb.slice(80).reduce((a,b)=>a+b,0)/80,sd3:scaleMeans()}}
+const DIALS=[{key:"guilt",name:"Guilt",hint:"How much you give up to spare someone else"},
+             {key:"fear",name:"Fear",hint:"How much potential losses weigh on you"},
+             {key:"reward",name:"Reward",hint:"How strongly gains and status pull you"}];
+function describe(mu,sd){const lo=mu-1.645*sd,hi=mu+1.645*sd;
+  let pos=mu<-1?"Lower than most people":mu>1?"Higher than most people":"In the typical range";
+  let conf=(hi-lo)>3?"Uncertain reading":(hi-lo)>2?"Moderately sure":"Fairly sure";return pos+". "+conf+"."}
+function gaugeSVG(mu,sd){
+  const W=220,H=132,cx=110,cy=112,R=88,toA=v=>Math.PI*(1-(Math.max(-3,Math.min(3,v))+3)/6);
+  const pt=(v,r)=>[cx+r*Math.cos(toA(v)),cy-r*Math.sin(toA(v))];
+  const arc=(a,b,r)=>{const [x1,y1]=pt(a,r),[x2,y2]=pt(b,r);return `M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`};
+  const lo=mu-1.645*sd,hi=mu+1.645*sd;const [nx,ny]=pt(mu,R-6);
+  const ticks=[-3,-2,-1,0,1,2,3].map(v=>{const [a,b]=pt(v,R+6),[c,d]=pt(v,R+12),[tx,ty]=pt(v,R+22);
+    return `<line x1="${a.toFixed(1)}" y1="${b.toFixed(1)}" x2="${c.toFixed(1)}" y2="${d.toFixed(1)}" stroke="var(--muted)" stroke-width="1"/>`+
+      (v%3===0||v===0?`<text x="${tx.toFixed(1)}" y="${(ty+3).toFixed(1)}" font-size="9" text-anchor="middle" fill="var(--muted)" font-family="Chivo Mono,monospace">${v>0?"+"+v:v}</text>`:"")}).join("");
+  return `<svg viewBox="-8 -14 236 150" role="img" aria-label="Dial reading ${mu.toFixed(2)}, 90% range ${lo.toFixed(2)} to ${hi.toFixed(2)}">
+    <path d="${arc(-3,3,R)}" fill="none" stroke="var(--band)" stroke-width="16"/>
+    <path d="${arc(-1,1,R)}" fill="none" stroke="var(--line)" stroke-width="16"/>
+    <path d="${arc(Math.max(-3,lo),Math.min(3,hi),R)}" fill="none" stroke="var(--accent)" stroke-opacity=".45" stroke-width="16"/>
+    ${ticks}
+    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="6" fill="var(--ink)"/></svg>`}
+let lastResult=null;
+function renderDone(){
+  const x=features();const r=runModel(layers(),x);const sm=summary();
+  lastResult={finishedAt:new Date().toISOString(),startedAt:S.startedAt,
+    dials:{guilt:{mu:r.mu[0],sd:r.sd[0]},fear:{mu:r.mu[1],sd:r.sd[1]},reward:{mu:r.mu[2],sd:r.sd[2]}},
+    summary:sm,items:S.items,gambles:S.gamb,harm:harmByDesign(),model:"integrator_spread1.6",design:"v2"};
+  const cards=DIALS.map((d,k)=>{const mu=r.mu[k],sd=r.sd[k];return `<div class="gauge"><div class="name">${d.name}</div>
+    <div class="small muted">${d.hint}</div>${gaugeSVG(mu,sd)}
+    <div class="val">${mu>=0?"+":""}${mu.toFixed(2)} &nbsp;<span class="muted">90%: ${(mu-1.645*sd).toFixed(1)} to ${(mu+1.645*sd).toFixed(1)}</span></div>
+    <div class="read">${describe(mu,sd)}</div></div>`}).join("");
+  const z=k=>((sm.sd3[k]-POP[k][0])/POP[k][1]);
+  h(`<section class="card"><div class="label">Your reading</div><h1>Your three dials</h1>
+     <p class="muted small">Scale in standard units: 0 is the average person, the light band covers most people (−1 to +1), the orange arc is the network's 90% confidence range.</p></section>
+   <div class="gauges">${cards}</div>
+   <section class="card"><h2>What fed the reading</h2><div class="tablewrap"><table>
+     <tr><th>Measure</th><th class="num">You</th><th class="num">Typical</th></tr>
+     <tr><td>Machiavellianism (SD3, 1 to 5)</td><td class="num">${sm.sd3.M.toFixed(2)}</td><td class="num">${POP.M[0].toFixed(2)}</td></tr>
+     <tr><td>Narcissism (SD3, 1 to 5)</td><td class="num">${sm.sd3.N.toFixed(2)}</td><td class="num">${POP.N[0].toFixed(2)}</td></tr>
+     <tr><td>Psychopathy (SD3, 1 to 5)</td><td class="num">${sm.sd3.P.toFixed(2)}</td><td class="num">${POP.P[0].toFixed(2)}</td></tr>
+     <tr><td>Gambles accepted</td><td class="num">${Math.round(sm.gambleAccept*100)}%</td><td class="num">n/a</td></tr>
+     <tr><td>Took money with more shocks, to you</td><td class="num">${Math.round(sm.harmSelf*100)}%</td><td class="num">n/a</td></tr>
+     <tr><td>Took money with more shocks, to a stranger</td><td class="num">${Math.round(sm.harmOther*100)}%</td><td class="num">n/a</td></tr>
+   </table></div>
+   <p class="small muted">Typical SD3 values are averages from 17,715 OpenPsychometrics respondents. Task norms will come from the pilot.</p>
+   <div class="note">This network has only ever seen simulated people, and these choices were hypothetical. Treat this as a first calibration point, not a verdict.</div>
+   <div class="row"><button class="primary" id="dl" hidden>Download data (JSON)</button><button id="again">Take it again</button></div>
+   <div class="status" id="saveStatus">Saving this session…</div><div id="confirmSlot"></div></section>${historyBlock()}`);
+  app.querySelector("#again").onclick=()=>{const slot=document.getElementById("confirmSlot");
+    slot.innerHTML=`<div class="confirm"><span>Start a new session? This one stays saved.</span><button id="yes">Start new session</button><button id="no">Cancel</button></div>`;
+    slot.querySelector("#yes").onclick=()=>{clearDraft();S=freshState();render()};slot.querySelector("#no").onclick=()=>slot.innerHTML=""};
+  setupDownload();saveResult();loadHistory();
+}
+// ---------- capabilities ----------
+let dbP=null,userP=null;
+function cap(name){try{return window.claude?.use?window.claude.use(name):Promise.resolve(null)}catch(e){return Promise.resolve(null)}}
+function getDb(){return dbP||(dbP=cap("db"))} function getUser(){return userP||(userP=cap("user"))}
+async function runsRef(){const db=await getDb(),user=await getUser();if(!db||!user)return null;const id=await user.id();if(!id)return null;
+  return db.doc("sessions/"+id).collection("runs")}
+async function saveResult(){const el=document.getElementById("saveStatus");if(!lastResult||S.savedId){if(el)el.textContent=S.savedId?"Saved to this page.":"";return}
+  try{const ref=await runsRef();if(!ref){if(el)el.textContent="Not saved: sign in to claude.ai to keep sessions on this page.";return}
+    const rid="run-"+Date.now();await ref.doc(rid).set(lastResult);S.savedId=rid;saveDraft();if(el)el.textContent="Saved to this page.";loadHistory()}
+  catch(e){if(el)el.textContent=e&&e.code==="invalid_argument"?"Not saved: you need Contributor access to save sessions here.":"Could not save this session. Use Download to keep a copy."}}
+async function setupDownload(){const dl=await cap("downloads");const b=document.getElementById("dl");if(!dl||!b)return;b.hidden=false;
+  b.onclick=async()=>{try{await dl.save({filename:"dials-session-"+lastResult.finishedAt.slice(0,10)+".json",data:JSON.stringify(lastResult,null,1)})}catch(e){}}}
+function historyBlock(){return `<section class="card" id="hist" hidden><h2>Your saved sessions</h2><div class="tablewrap" id="histBody"></div></section>`}
+async function loadHistory(){try{const ref=await runsRef();if(!ref)return;const snap=await ref.orderBy("finishedAt","desc").limit(20).get();
+  const docs=snap.docs?snap.docs:[];if(!docs.length)return;const el=document.getElementById("hist"),body=document.getElementById("histBody");if(!el)return;
+  const f=v=>(v>=0?"+":"")+v.toFixed(2);
+  body.innerHTML=`<table><tr><th>Date</th><th class="num">Guilt</th><th class="num">Fear</th><th class="num">Reward</th></tr>${docs.map(d=>{const r=d.data?d.data():d;
+    return `<tr><td>${new Date(r.finishedAt).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</td><td class="num">${f(r.dials.guilt.mu)}</td><td class="num">${f(r.dials.fear.mu)}</td><td class="num">${f(r.dials.reward.mu)}</td></tr>`}).join("")}</table>`;
+  el.hidden=false}catch(e){}}
+render();
+</script>

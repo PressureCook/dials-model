@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reversal learning task</title>
+<style>
+:root{--bg:#e9eef2;--ink:#1d2733;--mute:#5a6876;--a:#2f4b7c;--b:#c58b1a;--win:#1f7a4d;--lose:#a63d40;--line:#c4ced8}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:17px/1.55 "Avenir Next","Segoe UI",system-ui,sans-serif;display:grid;place-items:center;padding:24px}
+main{width:100%;max-width:640px}
+h1{font:600 2rem/1.15 "Iowan Old Style",Palatino,Georgia,serif;margin:0 0 12px}
+p{max-width:60ch}.mute{color:var(--mute);font-size:.9rem}
+input[type=text]{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:6px;width:100%;max-width:280px;background:#fff}
+button.go,button.dl{font:inherit;padding:12px 22px;border:0;border-radius:6px;background:var(--ink);color:#fff;cursor:pointer;margin:8px 8px 0 0}
+button:focus-visible,.card:focus-visible{outline:3px solid #6aa3d8;outline-offset:3px}
+label.chk{display:flex;gap:10px;align-items:flex-start;margin:12px 0}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:24px 0}
+.card{height:190px;border:0;border-radius:10px;font:600 1.3rem "Iowan Old Style",Palatino,Georgia,serif;color:#fff;cursor:pointer;transition:transform .08s}
+.card:active{transform:scale(.98)}
+.card[data-i="0"]{background:var(--a)}.card[data-i="1"]{background:var(--b)}
+.card:disabled{opacity:.55;cursor:default}
+#fb{height:2.2rem;font-weight:600;font-size:1.25rem}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ink);width:0}
+table{border-collapse:collapse;margin:12px 0}td{padding:5px 22px 5px 0;border-bottom:1px solid var(--line)}
+.hide{display:none}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<section id="intro">
+<h1>Two cards, one pays more often</h1>
+<p>On each round, choose a card. One card usually wins points and the other usually loses them. Now and then the pattern flips without warning, so keep paying attention. Click a card, or press F for the left card and J for the right card. It takes about five minutes.</p>
+<p class="mute">Your answers stay in this browser. Nothing is sent anywhere, and you can save the data file yourself at the end. This task is a research prototype, not a diagnostic test.</p>
+<p><label for="pid">Participant code (no real names)</label><br><input id="pid" type="text" maxlength="24" placeholder="e.g. P001"></p>
+<label class="chk"><input id="ok" type="checkbox"> I understand this is an experiment and I agree to take part.</label>
+<button class="go" id="start" disabled>Start</button>
+</section>
+
+<section id="task" class="hide" aria-live="polite">
+<div class="bar" aria-hidden="true"><i id="prog"></i></div>
+<div class="cards">
+<button class="card" data-i="0">Blue card<br><small>F</small></button>
+<button class="card" data-i="1">Gold card<br><small>J</small></button>
+</div>
+<div id="fb"></div>
+<p class="mute">Round <span id="n">1</span> of <span id="N"></span>. Points: <span id="pts">0</span></p>
+</section>
+
+<section id="done" class="hide">
+<h1>Finished</h1>
+<p>Here is a summary of your session. Save the data file so it can be analysed later.</p>
+<table id="sum"></table>
+<button class="dl" id="csv">Save trials (CSV)</button>
+<button class="dl" id="json">Save everything (JSON)</button>
+</section>
+</main>
+<script>
+const N=80, P_BEST=0.8, CRIT=8, ITI=900;
+const $=s=>document.querySelector(s);
+let best, streak, trial, pts, rows, t0, locked, reversals;
+
+$('#ok').onchange=e=>$('#start').disabled=!e.target.checked;
+$('#start').onclick=()=>{
+  best=Math.random()<.5?0:1; streak=0; trial=0; pts=0; rows=[]; reversals=[]; locked=false;
+  $('#intro').classList.add('hide'); $('#task').classList.remove('hide'); $('#N').textContent=N; next();
+};
+function next(){
+  if(trial>=N) return finish();
+  $('#n').textContent=trial+1; $('#prog').style.width=(100*trial/N)+'%';
+  $('#fb').textContent=''; $('#fb').style.color='';
+  document.querySelectorAll('.card').forEach(c=>c.disabled=false);
+  locked=false; t0=performance.now();
+}
+function choose(i){
+  if(locked||trial>=N||$('#task').classList.contains('hide')) return;
+  locked=true; const rt=Math.round(performance.now()-t0);
+  const rewarded=Math.random()<(i===best?P_BEST:1-P_BEST);
+  pts+=rewarded?10:-10; $('#pts').textContent=pts;
+  const f=$('#fb'); f.textContent=rewarded?'Won 10':'Lost 10'; f.style.color=rewarded?'var(--win)':'var(--lose)';
+  document.querySelectorAll('.card').forEach(c=>c.disabled=true);
+  streak=(i===best)?streak+1:0;
+  const row={trial:trial+1,choice:i,best_option:best,chose_best:+(i===best),rewarded:+rewarded,rt_ms:rt,reversal_after_trial:0,t:new Date().toISOString()};
+  trial++;
+  if(streak>=CRIT){best=1-best;streak=0;row.reversal_after_trial=1;reversals.push(trial);}
+  rows.push(row); setTimeout(next,ITI);
+}
+document.querySelectorAll('.card').forEach(c=>c.onclick=()=>choose(+c.dataset.i));
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='f')choose(0);if(k==='j')choose(1);});
+
+function summarise(){
+  const m=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN;
+  let ws=[],ls=[];
+  for(let k=1;k<rows.length;k++){
+    const prev=rows[k-1],stay=+(rows[k].choice===prev.choice);
+    (prev.rewarded?ws:ls).push(prev.rewarded?stay:1-stay);
+  }
+  const persev=reversals.map(r=>{let c=0;for(let k=r;k<rows.length;k++){if(rows[k].chose_best)break;c++;}return c;});
+  const rts=rows.map(r=>r.rt_ms).sort((a,b)=>a-b);
+  return {trials:rows.length,accuracy:m(rows.map(r=>r.chose_best)),win_stay:m(ws),lose_shift:m(ls),
+    reversals_reached:reversals.length,mean_errors_after_reversal:m(persev),median_rt_ms:rts[Math.floor(rts.length/2)],total_points:pts};
+}
+function finish(){
+  $('#task').classList.add('hide'); $('#done').classList.remove('hide');
+  const s=summarise(), t=$('#sum');
+  const label={trials:'Trials',accuracy:'Chose the better card',win_stay:'Repeated a winning choice',lose_shift:'Switched after a loss',reversals_reached:'Pattern flips reached',mean_errors_after_reversal:'Average wrong picks after a flip',median_rt_ms:'Median response time (ms)',total_points:'Points'};
+  t.innerHTML=Object.keys(s).map(k=>{const v=s[k];return `<tr><td>${label[k]}</td><td>${typeof v==='number'&&!Number.isInteger(v)?v.toFixed(2):v}</td></tr>`;}).join('');
+  window._summary=s;
+}
+function save(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();}
+const pid=()=>($('#pid').value.trim()||'anon');
+$('#csv').onclick=()=>{
+  const cols=Object.keys(rows[0]);
+  save(`${pid()}_reversal_trials.csv`,['participant,'+cols.join(',')].concat(rows.map(r=>pid()+','+cols.map(c=>r[c]).join(','))).join('\n'),'text/csv');
+};
+$('#json').onclick=()=>save(`${pid()}_reversal_full.json`,JSON.stringify({participant:pid(),task:'probabilistic_reversal_v1',params:{N,P_BEST,CRIT},summary:window._summary,trials:rows},null,2),'application/json');
+</script>
+</body>
+</html>
